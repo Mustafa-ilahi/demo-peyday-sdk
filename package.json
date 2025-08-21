@@ -1,0 +1,70 @@
+{
+  "name": "peydey-sdk",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "UAE Workforce Payment System Integration SDK for PeyDey",
+  "keywords": [
+    "peydey",
+    "uae",
+    "wps",
+    "workforce-payment",
+    "emirates-id",
+    "aed",
+    "salary-advance",
+    "payment-system",
+    "sdk"
+  ],
+  "author": "PeyDey Team",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build && npm run build:sdk",
+    "build:sdk": "rollup -c rollup.config.js",
+    "preview": "vite preview",
+    "test": "echo 'Open the app and go to the Run Tests tab to execute tests'",
+    "test:unit": "jest",
+    "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+    "prepare": "npm run build:sdk"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.55.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "rollup": "^4.6.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "vite": "^5.0.8"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peydey/peydey-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/peydey/peydey-sdk/issues"
+  },
+  "homepage": "https://github.com/peydey/peydey-sdk#readme"
+}

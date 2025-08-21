@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PeyDey SDK Integration Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h3 {
+            margin-top: 0;
+            color: #ffd700;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 5px;
+            transition: transform 0.2s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            border-left: 4px solid #4caf50;
+        }
+        
+        .error {
+            border-left: 4px solid #f44336;
+        }
+        
+        .info {
+            border-left: 4px solid #2196f3;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status.success {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        
+        .status.loading {
+            background: #2196f3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 PeyDey SDK Integration Test</h1>
+        
+        <div class="test-section">
+            <h3>🔐 Step 1: User Authentication</h3>
+            <p>Test user authentication with Emirates ID and phone number</p>
+            <button onclick="testAuthentication()">Test Authentication</button>
+            <div id="auth-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>👤 Step 2: User Information</h3>
+            <p>Get user details, eligibility, and financial information</p>
+            <button onclick="testUserDetails()" id="user-details-btn" disabled>Get User Details</button>
+            <div id="user-details-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Step 3: Transaction History</h3>
+            <p>Get user's transaction history and available balance</p>
+            <button onclick="testTransactionHistory()" id="history-btn" disabled>Get Transaction History</button>
+            <div id="history-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💰 Step 4: Fee Calculation</h3>
+            <p>Calculate withdrawal fees and VAT for a specific amount</p>
+            <input type="number" id="fee-amount" value="100" min="1" max="1000" placeholder="Amount in AED">
+            <button onclick="testFeeCalculation()" id="fee-btn" disabled>Calculate Fees</button>
+            <div id="fee-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>💳 Step 5: Withdrawal Request</h3>
+            <p>Initiate a withdrawal request</p>
+            <input type="number" id="withdrawal-amount" value="100" min="1" max="1000" placeholder="Amount in AED">
+            <button onclick="testWithdrawal()" id="withdrawal-btn" disabled>Initiate Withdrawal</button>
+            <div id="withdrawal-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔒 Step 6: WPS Validation</h3>
+            <p>Validate user with WPS system</p>
+            <button onclick="testWPSValidation()" id="wps-validation-btn" disabled>Validate with WPS</button>
+            <div id="wps-validation-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>⚙️ Step 7: WPS Processing</h3>
+            <p>Process withdrawal through WPS</p>
+            <button onclick="testWPSProcessing()" id="wps-processing-btn" disabled>Process with WPS</button>
+            <div id="wps-processing-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🚀 Complete Flow Test</h3>
+            <p>Run the complete PeyDey SDK flow from start to finish</p>
+            <button onclick="testCompleteFlow()">Run Complete Flow</button>
+            <div id="complete-flow-result" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧹 Cleanup</h3>
+            <p>Clear SDK session and reset state</p>
+            <button onclick="cleanup()">Clear Session</button>
+            <div id="cleanup-result" class="result"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the SDK and example functions
+        import { 
+            sdk, 
+            authenticateUser, 
+            getUserInformation, 
+            getTransactionHistory, 
+            calculateFees, 
+            initiateWithdrawal, 
+            validateWithWPS, 
+            processWithWPS, 
+            completePeyDeyFlow 
+        } from './quick-start.js';
+
+        // Global variables to store state
+        let currentWithdrawal = null;
+        let currentWpsCallback = null;
+
+        // Helper function to display results
+        function displayResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${type}`;
+        }
+
+        // Helper function to update button states
+        function updateButtonStates() {
+            const session = sdk.userSession.getSession();
+            const isAuthenticated = session.isAuthenticated;
+            
+            document.getElementById('user-details-btn').disabled = !isAuthenticated;
+            document.getElementById('history-btn').disabled = !isAuthenticated;
+            document.getElementById('fee-btn').disabled = !isAuthenticated;
+            document.getElementById('withdrawal-btn').disabled = !isAuthenticated;
+            document.getElementById('wps-validation-btn').disabled = !currentWpsCallback;
+            document.getElementById('wps-processing-btn').disabled = !currentWpsCallback;
+        }
+
+        // Test authentication
+        window.testAuthentication = async function() {
+            displayResult('auth-result', '🔄 Authenticating user...', 'loading');
+            
+            try {
+                const result = await authenticateUser('784-1968-6570305-0', '+971523213841');
+                
+                if (result) {
+                    displayResult('auth-result', '✅ Authentication successful!\n\nUser: Muhammad Abdul Majid\nEmirates ID: 784-1968-6570305-0\nPhone: +971523213841', 'success');
+                    updateButtonStates();
+                } else {
+                    displayResult('auth-result', '❌ Authentication failed', 'error');
+                }
+            } catch (error) {
+                displayResult('auth-result', `❌ Authentication error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test user details
+        window.testUserDetails = function() {
+            displayResult('user-details-result', '🔄 Getting user details...', 'loading');
+            
+            try {
+                const details = getUserInformation();
+                
+                if (details) {
+                    const result = `✅ User details retrieved successfully!
+
+Name: ${details.userData.name}
+Employer: ${details.userData.employerName}
+WPS Partner: ${details.userData.wpsPartner}
+Monthly Salary: ${details.userData.monthlySalary} AED
+Earned Salary: ${details.userData.earnedSalary} AED
+Available Balance: ${details.userData.limits.availableBalance} AED
+Eligible: ${details.canProceed ? 'Yes' : 'No'}`;
+                    
+                    displayResult('user-details-result', result, 'success');
+                } else {
+                    displayResult('user-details-result', '❌ Failed to get user details', 'error');
+                }
+            } catch (error) {
+                displayResult('user-details-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test transaction history
+        window.testTransactionHistory = function() {
+            displayResult('history-result', '🔄 Getting transaction history...', 'loading');
+            
+            try {
+                const history = getTransactionHistory();
+                
+                if (history) {
+                    const result = `✅ Transaction history retrieved successfully!
+
+Available Balance: ${history.availableBalance} AED
+Transaction Count: ${history.transactions.length}
+
+Transactions:${history.transactions.length > 0 ? 
+    history.transactions.map(tx => `\n- ${tx.amount} AED (${tx.formattedDate})`).join('') : 
+    '\n- No transactions yet'}`;
+                    
+                    displayResult('history-result', result, 'success');
+                } else {
+                    displayResult('history-result', '❌ Failed to get transaction history', 'error');
+                }
+            } catch (error) {
+                displayResult('history-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test fee calculation
+        window.testFeeCalculation = function() {
+            const amount = parseInt(document.getElementById('fee-amount').value);
+            displayResult('fee-result', `🔄 Calculating fees for ${amount} AED...`, 'loading');
+            
+            try {
+                const fees = calculateFees(amount);
+                
+                if (fees) {
+                    const result = `✅ Fees calculated successfully!
+
+Requested Amount: ${fees.fees.requestedAmount} AED
+Early Access Fee (5%): ${fees.fees.earlyAccessFee} AED
+VAT (5%): ${fees.fees.vatAmount} AED
+Total Fee: ${fees.fees.totalFee} AED
+You Receive: ${fees.fees.youReceive} AED`;
+                    
+                    displayResult('fee-result', result, 'success');
+                } else {
+                    displayResult('fee-result', '❌ Failed to calculate fees', 'error');
+                }
+            } catch (error) {
+                displayResult('fee-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test withdrawal
+        window.testWithdrawal = async function() {
+            const amount = parseInt(document.getElementById('withdrawal-amount').value);
+            displayResult('withdrawal-result', `🔄 Initiating withdrawal for ${amount} AED...`, 'loading');
+            
+            try {
+                const withdrawal = await initiateWithdrawal(amount, 'salary');
+                
+                if (withdrawal) {
+                    currentWithdrawal = withdrawal;
+                    currentWpsCallback = withdrawal.wpsCallback;
+                    
+                    const result = `✅ Withdrawal request initiated successfully!
+
+Request ID: ${withdrawal.withdrawalRequest.id}
+Amount: ${withdrawal.withdrawalRequest.amount} AED
+Type: ${withdrawal.withdrawalRequest.type}
+Status: ${withdrawal.withdrawalRequest.status}
+Currency: ${withdrawal.withdrawalRequest.currency}
+
+WPS Callback created and ready for validation.`;
+                    
+                    displayResult('withdrawal-result', result, 'success');
+                    updateButtonStates();
+                } else {
+                    displayResult('withdrawal-result', '❌ Failed to initiate withdrawal', 'error');
+                }
+            } catch (error) {
+                displayResult('withdrawal-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test WPS validation
+        window.testWPSValidation = async function() {
+            displayResult('wps-validation-result', '🔄 Validating with WPS...', 'loading');
+            
+            try {
+                const validation = await validateWithWPS(currentWpsCallback, {
+                    method: 'emiratesId',
+                    value: '784-1968-6570305-0'
+                });
+                
+                if (validation) {
+                    const result = `✅ WPS validation successful!
+
+Message: ${validation.message}
+Eligibility: ${validation.eligibilityCheck ? 'Checked' : 'Not checked'}`;
+                    
+                    displayResult('wps-validation-result', result, 'success');
+                } else {
+                    displayResult('wps-validation-result', '❌ WPS validation failed', 'error');
+                }
+            } catch (error) {
+                displayResult('wps-validation-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test WPS processing
+        window.testWPSProcessing = async function() {
+            displayResult('wps-processing-result', '🔄 Processing with WPS...', 'loading');
+            
+            try {
+                // First validate, then process
+                const validation = await validateWithWPS(currentWpsCallback, {
+                    method: 'emiratesId',
+                    value: '784-1968-6570305-0'
+                });
+                
+                if (validation) {
+                    const processing = await processWithWPS(currentWpsCallback, validation);
+                    
+                    if (processing) {
+                        const result = `✅ WPS processing successful!
+
+Receipt Number: ${processing.receipt.receiptNumber}
+Transaction ID: ${processing.transactionId}
+Amount: ${processing.receipt.amount} AED
+Status: ${processing.receipt.status}
+Message: ${processing.receipt.message}
+
+Receipt Details:
+- User: ${processing.receipt.user}
+- Emirates ID: ${processing.receipt.emiratesId}
+- Employer: ${processing.receipt.employer}
+- WPS Partner: ${processing.receipt.wpsPartner}
+- Date: ${new Date(processing.receipt.date).toLocaleString()}`;
+                        
+                        displayResult('wps-processing-result', result, 'success');
+                    } else {
+                        displayResult('wps-processing-result', '❌ WPS processing failed', 'error');
+                    }
+                } else {
+                    displayResult('wps-processing-result', '❌ WPS validation failed, cannot process', 'error');
+                }
+            } catch (error) {
+                displayResult('wps-processing-result', `❌ Error: ${error.message}`, 'error');
+            }
+        };
+
+        // Test complete flow
+        window.testCompleteFlow = async function() {
+            displayResult('complete-flow-result', '🚀 Starting complete PeyDey SDK flow...', 'loading');
+            
+            try {
+                await completePeyDeyFlow();
+                displayResult('complete-flow-result', '🎉 Complete flow test finished! Check the console for detailed output.', 'success');
+                
+                // Update button states
+                updateButtonStates();
+            } catch (error) {
+                displayResult('complete-flow-result', `❌ Complete flow test failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Cleanup
+        window.cleanup = function() {
+            try {
+                const result = sdk.exitSDK();
+                
+                // Reset global variables
+                currentWithdrawal = null;
+                currentWpsCallback = null;
+                
+                // Update button states
+                updateButtonStates();
+                
+                displayResult('cleanup-result', `✅ Cleanup successful!\n\n${result.message}`, 'success');
+                
+                // Clear all result displays
+                const resultElements = document.querySelectorAll('.result');
+                resultElements.forEach(element => {
+                    element.textContent = '';
+                    element.className = 'result';
+                });
+                
+            } catch (error) {
+                displayResult('cleanup-result', `❌ Cleanup failed: ${error.message}`, 'error');
+            }
+        };
+
+        // Initialize button states
+        updateButtonStates();
+        
+        console.log('🚀 PeyDey SDK Integration Test loaded!');
+        console.log('Use the buttons above to test each step of the SDK flow.');
+    </script>
+</body>
+</html>
