@@ -1,63 +1,41 @@
+import { defineConfig } from 'rollup';
 import terser from '@rollup/plugin-terser';
 
-export default [
-  // CommonJS build
-  {
-    input: 'src/sdk/index.js',
-    output: {
+export default defineConfig({
+  input: 'src/sdk/index.js',
+  output: [
+    {
       file: 'dist/index.js',
       format: 'cjs',
-      sourcemap: true,
-      exports: 'named'
+      sourcemap: true
     },
-    plugins: [
-      terser({
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      })
-    ]
-  },
-  // ES Module build
-  {
-    input: 'src/sdk/index.js',
-    output: {
+    {
       file: 'dist/index.esm.js',
       format: 'esm',
       sourcemap: true
     },
-    plugins: [
-      terser({
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      })
-    ]
-  },
-  // UMD build for browser
-  {
-    input: 'src/sdk/index.js',
-    output: {
+    {
       file: 'dist/index.umd.js',
       format: 'umd',
-      name: 'PeyDeySDK',
+      name: 'WorkforceSDK',
       sourcemap: true,
-      exports: 'named',
       globals: {
         'react': 'React',
         'react-dom': 'ReactDOM'
       }
     },
-    external: ['react', 'react-dom'],
-    plugins: [
-      terser({
-        compress: {
-          drop_console: true,
-          drop_debugger: true
-        }
-      })
-    ]
-  }
-];
+    {
+      file: 'dist/index.umd.min.js',
+      format: 'umd',
+      name: 'WorkforceSDK',
+      sourcemap: true,
+      plugins: [terser()],
+      globals: {
+        'react': 'React',
+        'react-dom': 'ReactDOM'
+      }
+    }
+  ],
+  external: ['react', 'react-dom'],
+  plugins: []
+});
