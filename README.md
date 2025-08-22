@@ -1,40 +1,29 @@
-# 🏦 PeyDey SDK
 
-**UAE Workforce Payment System Integration SDK**
 
-A comprehensive JavaScript SDK for integrating with the UAE Workforce Payment System (WPS), designed to match the exact flow and design from your PeyDey mobile application screens.
+A comprehensive JavaScript SDK for integrating with workforce payment systems, designed to provide a complete flow from onboarding to withdrawal completion.
 
-## 🇦🇪 **Features**
+## 🚀 **Features**
 
-- **UAE-Specific Authentication**: Emirates ID and UAE phone number support
-- **Mobile-First Design**: Beautiful, responsive interface matching your app screens
+- **Authentication**: ID and phone number support
+- **Mobile-First Design**: Beautiful, responsive interface
 - **Complete Flow Implementation**: 7-step process from onboarding to withdrawal completion
-- **WPS Integration**: Seamless integration with UAE Workforce Payment System
-- **Fee Calculation**: Automatic early access fees and 5% VAT calculation
+- **Payment System Integration**: Seamless integration with workforce payment systems
+- **Fee Calculation**: Automatic early access fees and VAT calculation
 - **Transaction Management**: Full transaction history and balance tracking
 - **Comprehensive Testing**: 25 automated tests covering all functionality
 - **Modern UI/UX**: Beautiful gradients, animations, and mobile-responsive design
 
 ## 🏗️ **Architecture Overview**
 
-The PeyDey SDK follows the exact flow from your mobile screens:
+The SDK follows a complete flow:
 
-1. **🔐 Get Started**: Emirates ID and phone number authentication
-2. **👤 Welcome to PeyDey**: User profile, employer info, and financial summary
+1. **🔐 Get Started**: ID and phone number authentication
+2. **👤 Welcome**: User profile, employer info, and financial summary
 3. **📊 Transaction History**: Available balance and transaction list
-4. **💰 Get Paid**: Amount selection with fee breakdown (5% fee + 5% VAT)
-5. **🔒 WPS Validation**: WPS validates user and checks eligibility
-6. **⚙️ WPS Processing**: WPS processes withdrawal and generates receipt
+4. **💰 Get Paid**: Amount selection with fee breakdown
+5. **🔒 Validation**: System validates user and checks eligibility
+6. **⚙️ Processing**: System processes withdrawal and generates receipt
 7. **🎉 Success**: Show receipt and return to dashboard option
-
-## 🇦🇪 **UAE-Specific Features**
-
-- **Emirates ID Authentication**: Primary identification method
-- **UAE Phone Numbers**: +971 format support
-- **AED Currency**: All amounts in UAE Dirhams
-- **VAT Calculation**: 5% VAT on early access fees
-- **WPS Integration**: UAE Workforce Payment System
-- **Employer Partnerships**: Emirates NBD, Alfardan Exchange
 
 ## 💰 **Financial Calculations**
 
@@ -63,18 +52,18 @@ npm run build:sdk
 
 #### 1. **NPM Package (Recommended)**
 ```bash
-npm install peydey-sdk
+npm install workforce-sdk
 ```
 
 #### 2. **CDN (Browser)**
 ```html
-<script src="https://unpkg.com/peydey-sdk@1.0.0/dist/index.umd.js"></script>
+<script src="https://unpkg.com/workforce-sdk@1.0.0/dist/index.umd.js"></script>
 ```
 
 #### 3. **Direct Import**
 ```bash
-git clone https://github.com/peydey/peydey-sdk.git
-cd peydey-sdk
+git clone https://github.com/workforce/workforce-sdk.git
+cd workforce-sdk
 npm install
 npm run build:sdk
 ```
@@ -82,15 +71,15 @@ npm run build:sdk
 ### Basic Usage
 
 ```javascript
-import PeyDeySDK from './sdk/index.js';
+import WorkforceSDK from './sdk/index.js';
 
 // Initialize SDK
-const sdk = new PeyDeySDK({ debug: true });
+const sdk = new WorkforceSDK({ debug: true });
 
-// Step 1: Onboard user with Emirates ID
+// Step 1: Onboard user with ID
 const credentials = {
-  emiratesId: '784-1968-6570305-0',
-  phoneNumber: '+971523213841'
+  id: '123-4567-8901234-0',
+  phoneNumber: '+1234567890'
 };
 
 const onboardResult = await sdk.onboardUser(credentials);
@@ -107,15 +96,15 @@ const fees = sdk.calculateWithdrawalFees(100);
 // Step 5: Initiate withdrawal
 const withdrawal = await sdk.handleWithdrawalRequest(100, 'salary');
 
-// Step 6: WPS validation
-const wpsCallback = withdrawal.wpsCallback;
-const validation = await wpsCallback.validateUser({
-  method: 'emiratesId',
-  value: '784-1968-6570305-0'
+// Step 6: System validation
+const callback = withdrawal.callback;
+const validation = await callback.validateUser({
+  method: 'id',
+  value: '123-4567-8901234-0'
 });
 
-// Step 7: WPS processing
-const processing = await wpsCallback.processWithdrawal(validation);
+// Step 7: System processing
+const processing = await callback.processWithdrawal(validation);
 ```
 
 ## 🧪 **Testing**
@@ -125,11 +114,11 @@ const processing = await wpsCallback.processWithdrawal(validation);
 1. Open the app in your browser
 2. Go to "SDK Flow Demo" tab
 3. Follow the 7-step flow:
-   - Login with Emirates ID: `784-1968-6570305-0`
-   - Phone: `+971523213841`
+   - Login with ID: `123-4567-8901234-0`
+   - Phone: `+1234567890`
    - Navigate through each step
    - Test fee calculations
-   - Complete WPS integration
+   - Complete system integration
 
 ### Automated Tests
 
@@ -142,9 +131,9 @@ const processing = await wpsCallback.processWithdrawal(validation);
 - ✅ UserSession management (3 tests)
 - ✅ UserEligibility checks (3 tests)
 - ✅ TransactionHistory management (2 tests)
-- ✅ WPSIntegration validation (4 tests)
+- ✅ SystemIntegration validation (4 tests)
 - ✅ WithdrawalHandler processing (3 tests)
-- ✅ PeyDeySDK integration (5 tests)
+- ✅ WorkforceSDK integration (5 tests)
 - ✅ End-to-End flow testing (2 tests)
 - ✅ Error handling scenarios (3 tests)
 
@@ -162,7 +151,7 @@ clearSession()              // Clear session and logout user
 
 ### ✅ UserEligibility Class
 
-Handles UAE-specific eligibility checks and withdrawal limits:
+Handles eligibility checks and withdrawal limits:
 
 ```javascript
 checkEligibility(userData)           // Check if user is eligible for withdrawals
@@ -173,42 +162,42 @@ calculateFees(amount, userData)      // Calculate early access fees and VAT
 
 ### 📊 TransactionHistory Class
 
-Manages UAE transaction records with AED currency:
+Manages transaction records:
 
 ```javascript
 addTransaction(transaction)                    // Add new transaction
 getTransactionHistory(userId, limit)          // Get user's transaction history
 updateTransactionStatus(transactionId, status) // Update transaction status
-formatTransactionDate(timestamp)              // Format dates for UAE display
+formatTransactionDate(timestamp)              // Format dates for display
 ```
 
 ### 💰 WithdrawalHandler Class
 
-Handles PeyDey withdrawal requests and WPS integration:
+Handles withdrawal requests and system integration:
 
 ```javascript
 initiateWithdrawal(userData, amount, type)    // Create withdrawal request
 validateWithdrawalRequest(userData, amount)   // Validate withdrawal parameters
-createWPSCallback(withdrawalRequest)          // Create WPS integration callback
+createCallback(withdrawalRequest)             // Create system integration callback
 ```
 
-### 🏦 WPSIntegration Class
+### 🏦 SystemIntegration Class
 
-UAE Workforce Payment System integration layer:
+Payment system integration layer:
 
 ```javascript
-validateUser(credentials, withdrawalRequest)      // Validate user with WPS
-checkWPSEligibility(withdrawalRequest)           // Check eligibility on WPS side
-processWithdrawal(withdrawalRequest, validationResult) // Process withdrawal through WPS
-generateReceipt(withdrawalRequest)               // Generate UAE transaction receipt
+validateUser(credentials, withdrawalRequest)      // Validate user with system
+checkEligibility(withdrawalRequest)               // Check eligibility on system side
+processWithdrawal(withdrawalRequest, validationResult) // Process withdrawal through system
+generateReceipt(withdrawalRequest)               // Generate transaction receipt
 ```
 
-### 🚀 PeyDeySDK Class
+### 🚀 WorkforceSDK Class
 
-Main SDK class orchestrating the entire UAE flow:
+Main SDK class orchestrating the entire flow:
 
 ```javascript
-onboardUser(credentials)              // Step 1: Emirates ID authentication
+onboardUser(credentials)              // Step 1: ID authentication
 getUserDetails()                      // Step 2: Display user information
 getTransactionHistory()               // Step 3: Get balance and transactions
 calculateWithdrawalFees(amount)      // Step 4: Calculate fees and VAT
@@ -216,24 +205,24 @@ handleWithdrawalRequest(amount, type) // Step 5: Initiate withdrawal
 exitSDK()                            // Exit and clear session
 ```
 
-## 🔄 **WPS Callback Flow**
+## 🔄 **System Callback Flow**
 
-The SDK exposes callbacks to WPS for their side of logic:
+The SDK exposes callbacks to the payment system for their side of logic:
 
-- **validateUser**: WPS validates Emirates ID and eligibility
-- **processWithdrawal**: WPS processes the withdrawal and generates receipt
+- **validateUser**: System validates ID and eligibility
+- **processWithdrawal**: System processes the withdrawal and generates receipt
 - **Return to Dashboard**: After successful processing, user returns to main interface
 
 ## ⚙️ **Configuration**
 
-SDK can be configured with various UAE-specific options:
+SDK can be configured with various options:
 
 ```javascript
-const sdk = new PeyDeySDK({
+const sdk = new WorkforceSDK({
   debug: true,                    // Enable/disable debug logging
-  wpsEndpoint: 'https://wps.peydey.ae', // WPS API endpoint URL
-  currency: 'AED',                // Currency (default: AED)
-  country: 'UAE',                 // Country (default: UAE)
+  endpoint: 'https://api.example.com', // API endpoint URL
+  currency: 'USD',                // Currency (default: USD)
+  country: 'US',                  // Country (default: US)
   version: '1.0.0'               // SDK version string
 });
 ```
@@ -245,12 +234,12 @@ const sdk = new PeyDeySDK({
 - **Responsive Layout**: Works perfectly on all device sizes
 - **Beautiful Gradients**: Modern purple-blue gradient theme
 - **Smooth Animations**: Hover effects and transitions
-- **UAE Elements**: Emirates ID fields, UAE flag, AED currency
+- **Interactive Elements**: ID fields, currency display
 
 ### Interactive Elements
 
 - **Step-by-Step Flow**: Clear navigation between 7 steps
-- **Quick Amount Selection**: Pre-defined AED amounts (100, 250, 500, 750)
+- **Quick Amount Selection**: Pre-defined amounts (100, 250, 500, 750)
 - **Real-time Fee Calculation**: Instant fee breakdown as you type
 - **Progress Indicators**: Visual flow navigation
 - **Success Receipts**: Beautiful transaction confirmation
@@ -298,20 +287,20 @@ http://192.168.0.122:5173
 
 ## 🔧 **Mock Data**
 
-For testing purposes, the SDK includes mock UAE user data:
+For testing purposes, the SDK includes mock user data:
 
-- **Emirates ID**: `784-1968-6570305-0`
-- **Phone**: `+971523213841`
-- **Name**: Muhammad Abdul Majid
-- **Employer**: Emirates NBD
-- **WPS Partner**: Alfardan Exchange
-- **Monthly Salary**: 3,000 AED
-- **Earned Salary**: 1,500 AED
-- **Available Balance**: 375 AED (25% of earned salary)
+- **ID**: `123-4567-8901234-0`
+- **Phone**: `+1234567890`
+- **Name**: John Doe
+- **Employer**: Example Corp
+- **Partner**: Payment Partner
+- **Monthly Salary**: 3,000 USD
+- **Earned Salary**: 1,500 USD
+- **Available Balance**: 375 USD (25% of earned salary)
 
 ## 🔗 **Integration with Other Systems**
 
-The PeyDey SDK is designed for seamless integration with various platforms and systems:
+The SDK is designed for seamless integration with various platforms and systems:
 
 ### **Frontend Frameworks**
 - **React**: Full component integration with hooks
@@ -337,25 +326,14 @@ The PeyDey SDK is designed for seamless integration with various platforms and s
 - **HR Systems**: Employee management integration
 - **ERP Systems**: Enterprise resource planning integration
 
-## 📱 **Mobile App Integration**
-
-The SDK is designed to integrate seamlessly with your PeyDey mobile application:
-
-1. **Same Flow**: Identical 7-step process
-2. **Same Calculations**: Exact fee and VAT calculations
-3. **Same Validation**: Emirates ID and phone number validation
-4. **Same WPS Integration**: Identical callback structure
-5. **Same UI Elements**: Matching design and user experience
-
 ## 🌟 **What Makes This Special**
 
-- **Exact Match**: Built to match your mobile screens pixel-perfectly
-- **UAE-First**: Designed specifically for UAE workforce payment needs
+- **Complete Flow**: Built to handle the entire workforce payment process
 - **Production Ready**: Comprehensive error handling and validation
 - **Beautiful UI**: Modern, mobile-first design with smooth animations
 - **Full Testing**: 25 automated tests ensure reliability
 - **Documentation**: Complete API reference and examples
-- **WPS Ready**: Seamless integration with UAE Workforce Payment System
+- **System Ready**: Seamless integration with payment systems
 
 ## 📚 **Additional Resources**
 
@@ -369,8 +347,8 @@ The SDK is designed to integrate seamlessly with your PeyDey mobile application:
 
 ## 📄 **License**
 
-This project is designed for PeyDey SDK integration and testing purposes.
+This project is designed for workforce payment SDK integration and testing purposes.
 
 ---
 
-**Built with ❤️ for the UAE Workforce Payment System**
+**Built with ❤️ for workforce payment systems**
