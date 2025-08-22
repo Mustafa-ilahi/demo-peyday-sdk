@@ -1,125 +1,115 @@
-// PeyDey SDK - UAE Workforce Payment System Integration
+// Workforce SDK - Payment System Integration
+// A comprehensive SDK for integrating with workforce payment systems
 
 /**
- * User session management
+ * UserSession Class
+ * Manages user authentication state and session data
  */
 export class UserSession {
   constructor() {
+    this.session = null;
     this.isAuthenticated = false;
-    this.userData = null;
-    this.sessionId = null;
   }
 
   createSession(userData) {
-    this.userData = userData;
+    this.session = {
+      id: userData.id || userData.emiratesId,
+      phoneNumber: userData.phoneNumber,
+      name: userData.name,
+      employer: userData.employer,
+      monthlySalary: userData.monthlySalary,
+      earnedSalary: userData.earnedSalary,
+      availableBalance: userData.availableBalance,
+      createdAt: new Date().toISOString(),
+      lastActivity: new Date().toISOString()
+    };
     this.isAuthenticated = true;
-    this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    return this.sessionId;
+    return this.session;
   }
 
   getSession() {
-    return {
-      sessionId: this.sessionId,
-      isAuthenticated: this.isAuthenticated,
-      userData: this.userData
-    };
+    return this.session;
   }
 
   clearSession() {
+    this.session = null;
     this.isAuthenticated = false;
-    this.userData = null;
-    this.sessionId = null;
+  }
+
+  isUserAuthenticated() {
+    return this.isAuthenticated && this.session !== null;
   }
 }
 
 /**
- * UAE-specific user eligibility and limits management
+ * UserEligibility Class
+ * Handles eligibility checks and withdrawal limits
  */
 export class UserEligibility {
-  constructor() {
-    this.eligibilityRules = {
-      minSalary: 1000, // AED
-      maxWithdrawalPercent: 0.25, // 25% of earned salary
-      minAccountAge: 30, // days
-      earlyAccessFee: 0.05, // 5% fee
-      vatRate: 0.05 // 5% VAT
-    };
-  }
-
   checkEligibility(userData) {
-    const { monthlySalary, earnedSalary, accountAge, hasActiveLoans, creditScore } = userData;
-    
-    const isEligible = 
-      monthlySalary >= this.eligibilityRules.minSalary &&
-      accountAge >= this.eligibilityRules.minAccountAge &&
-      !hasActiveLoans &&
-      creditScore >= 650 &&
-      earnedSalary > 0;
-
+    const reasons = this.getIneligibilityReasons(userData);
     return {
-      isEligible,
-      reasons: !isEligible ? this.getIneligibilityReasons(userData) : [],
-      limits: this.calculateLimits(userData)
+      isEligible: reasons.length === 0,
+      reasons: reasons
     };
   }
 
   getIneligibilityReasons(userData) {
     const reasons = [];
-    const { monthlySalary, accountAge, hasActiveLoans, creditScore, earnedSalary } = userData;
 
-    if (monthlySalary < this.eligibilityRules.minSalary) {
-      reasons.push(`Monthly salary below minimum requirement (AED ${this.eligibilityRules.minSalary})`);
+    if (!userData.id && !userData.emiratesId) {
+      reasons.push('Missing identification');
     }
-    if (accountAge < this.eligibilityRules.minAccountAge) {
-      reasons.push(`Account age below minimum requirement (${this.eligibilityRules.minAccountAge} days)`);
+
+    if (!userData.phoneNumber) {
+      reasons.push('Missing phone number');
     }
-    if (hasActiveLoans) {
-      reasons.push('Active loans detected');
+
+    if (!userData.employer) {
+      reasons.push('Missing employer information');
     }
-    if (creditScore < 650) {
-      reasons.push('Credit score below minimum requirement (650)');
+
+    if (!userData.monthlySalary || userData.monthlySalary <= 0) {
+      reasons.push('Invalid monthly salary');
     }
-    if (earnedSalary <= 0) {
-      reasons.push('No earned salary available');
+
+    if (!userData.earnedSalary || userData.earnedSalary <= 0) {
+      reasons.push('Invalid earned salary');
     }
 
     return reasons;
   }
 
   calculateLimits(userData) {
-    const { monthlySalary, earnedSalary, accountAge } = userData;
-    const availableBalance = earnedSalary * this.eligibilityRules.maxWithdrawalPercent;
-    
+    const earnedSalary = userData.earnedSalary || 0;
+    const availableBalance = Math.floor(earnedSalary * 0.25); // 25% of earned salary
+
     return {
-      monthlySalary,
       earnedSalary,
-      availableBalance: Math.round(availableBalance * 100) / 100,
-      maxWithdrawalPercent: this.eligibilityRules.maxWithdrawalPercent * 100,
-      accountAge,
-      earlyAccessFee: this.eligibilityRules.earlyAccessFee,
-      vatRate: this.eligibilityRules.vatRate
+      availableBalance,
+      maxWithdrawal: availableBalance
     };
   }
 
   calculateFees(amount, userData) {
-    const { earlyAccessFee, vatRate } = this.eligibilityRules;
-    const earlyAccessFeeAmount = amount * earlyAccessFee;
-    const vatAmount = earlyAccessFeeAmount * vatRate;
-    const totalFee = earlyAccessFeeAmount + vatAmount;
+    const earlyAccessFee = Math.floor(amount * 0.05); // 5% early access fee
+    const vat = Math.floor(earlyAccessFee * 0.05); // 5% VAT on fee
+    const totalFee = earlyAccessFee + vat;
     const youReceive = amount - totalFee;
 
     return {
-      requestedAmount: amount,
-      earlyAccessFee: Math.round(earlyAccessFeeAmount * 100) / 100,
-      vatAmount: Math.round(vatAmount * 100) / 100,
-      totalFee: Math.round(totalFee * 100) / 100,
-      youReceive: Math.round(youReceive * 100) / 100
+      amount,
+      earlyAccessFee,
+      vat,
+      totalFee,
+      youReceive
     };
   }
 }
 
 /**
- * Transaction history management for UAE
+ * TransactionHistory Class
+ * Manages transaction records
  */
 export class TransactionHistory {
   constructor() {
@@ -129,24 +119,23 @@ export class TransactionHistory {
   addTransaction(transaction) {
     const newTransaction = {
       id: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      ...transaction,
       timestamp: new Date().toISOString(),
-      status: 'pending',
-      currency: 'AED',
-      ...transaction
+      status: 'pending'
     };
-    
-    this.transactions.unshift(newTransaction);
+    this.transactions.push(newTransaction);
     return newTransaction;
   }
 
   getTransactionHistory(userId, limit = 10) {
     return this.transactions
-      .filter(tx => tx.userId === userId)
+      .filter(txn => txn.userId === userId)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
       .slice(0, limit);
   }
 
   updateTransactionStatus(transactionId, status) {
-    const transaction = this.transactions.find(tx => tx.id === transactionId);
+    const transaction = this.transactions.find(txn => txn.id === transactionId);
     if (transaction) {
       transaction.status = status;
       transaction.updatedAt = new Date().toISOString();
@@ -155,486 +144,322 @@ export class TransactionHistory {
   }
 
   formatTransactionDate(timestamp) {
-    const date = new Date(timestamp);
-    const options = { 
-      day: 'numeric', 
-      month: 'long', 
+    return new Date(timestamp).toLocaleDateString('en-US', {
       year: 'numeric',
+      month: 'short',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
-    };
-    return date.toLocaleDateString('en-US', options);
+    });
   }
 }
 
 /**
- * PeyDey withdrawal handling and WPS integration
+ * SystemIntegration Class
+ * Payment system integration layer
  */
-export class WithdrawalHandler {
-  constructor(wpsIntegration) {
-    this.wpsIntegration = wpsIntegration;
-    this.withdrawalRequests = [];
-  }
-
-  initiateWithdrawal(userData, amount, withdrawalType = 'salary') {
-    // Validate withdrawal request
-    const validation = this.validateWithdrawalRequest(userData, amount);
-    
-    if (!validation.isValid) {
-      return {
-        success: false,
-        error: validation.error,
-        code: validation.code
-      };
-    }
-
-    // Create withdrawal request
-    const withdrawalRequest = {
-      id: `wd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      userId: userData.id,
-      amount,
-      withdrawalType,
-      status: 'pending',
-      timestamp: new Date().toISOString(),
-      currency: 'AED',
-      userData: {
-        name: userData.name,
-        emiratesId: userData.emiratesId,
-        phoneNumber: userData.phoneNumber,
-        employerName: userData.employerName,
-        wpsPartner: userData.wpsPartner
-      }
-    };
-
-    this.withdrawalRequests.push(withdrawalRequest);
-
-    // Expose callback to WPS for their side of logic
-    const wpsCallback = this.createWPSCallback(withdrawalRequest);
-    
-    return {
-      success: true,
-      withdrawalRequest,
-      wpsCallback,
-      message: 'Withdrawal request created. Proceed with WPS validation.'
-    };
-  }
-
-  validateWithdrawalRequest(userData, amount) {
-    const { availableBalance, earnedSalary } = userData.limits;
-    
-    if (amount <= 0) {
-      return { isValid: false, error: 'Invalid withdrawal amount', code: 'INVALID_AMOUNT' };
-    }
-    
-    if (amount > availableBalance) {
-      return { 
-        isValid: false, 
-        error: `Amount exceeds available balance of AED ${availableBalance}`, 
-        code: 'EXCEEDS_BALANCE' 
-      };
-    }
-
-    if (amount > earnedSalary * 0.25) {
-      return { 
-        isValid: false, 
-        error: 'Amount exceeds 25% of earned salary limit', 
-        code: 'EXCEEDS_SALARY_LIMIT' 
-      };
-    }
-
-    return { isValid: true };
-  }
-
-  createWPSCallback(withdrawalRequest) {
-    return {
-      requestId: withdrawalRequest.id,
-      validateUser: async (credentials) => {
-        return await this.wpsIntegration.validateUser(credentials, withdrawalRequest);
-      },
-      processWithdrawal: async (validationResult) => {
-        return await this.wpsIntegration.processWithdrawal(withdrawalRequest, validationResult);
-      }
-    };
-  }
-
-  getWithdrawalStatus(requestId) {
-    return this.withdrawalRequests.find(wd => wd.id === requestId);
-  }
-}
-
-/**
- * UAE WPS Integration Layer
- */
-export class WPSIntegration {
-  constructor() {
-    this.validationMethods = ['password', 'pin', 'emiratesId'];
-    this.processingStatuses = ['pending', 'processing', 'completed', 'failed'];
+export class SystemIntegration {
+  constructor(config = {}) {
+    this.endpoint = config.endpoint || 'https://api.example.com';
+    this.debug = config.debug || false;
   }
 
   async validateUser(credentials, withdrawalRequest) {
-    const { method, value } = credentials;
-    
-    if (!this.validationMethods.includes(method)) {
-      return {
-        success: false,
-        error: 'Invalid validation method',
-        code: 'INVALID_METHOD'
-      };
+    if (this.debug) {
+      console.log('[SystemIntegration] Validating user:', credentials);
     }
 
-    // Simulate WPS user validation
-    const isValid = await this.performWPSValidation(method, value, withdrawalRequest);
-    
-    if (!isValid) {
-      return {
-        success: false,
-        error: 'User validation failed',
-        code: 'VALIDATION_FAILED'
-      };
-    }
-
-    // Perform eligibility check on WPS side
-    const eligibilityCheck = await this.checkWPSEligibility(withdrawalRequest);
-    
-    if (!eligibilityCheck.isEligible) {
-      return {
-        success: false,
-        error: 'User not eligible for withdrawal',
-        code: 'NOT_ELIGIBLE',
-        reasons: eligibilityCheck.reasons
-      };
-    }
+    // Simulate API call to payment system
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     return {
-      success: true,
-      message: 'User validated successfully',
-      eligibilityCheck
+      isValid: true,
+      userId: credentials.value,
+      eligibility: 'eligible',
+      limits: {
+        maxWithdrawal: 1000,
+        dailyLimit: 500
+      }
     };
   }
 
-  async performWPSValidation(method, value, withdrawalRequest) {
-    // Simulate WPS validation logic
-    await this.simulateWPSCall();
-    
-    // Mock validation - in real implementation, this would call WPS API
-    if (method === 'emiratesId') {
-      return value === '784-1968-6570305-0';
-    } else if (method === 'password') {
-      return value === 'correct_password';
-    } else if (method === 'pin') {
-      return value === '1234';
+  async checkEligibility(withdrawalRequest) {
+    if (this.debug) {
+      console.log('[SystemIntegration] Checking eligibility:', withdrawalRequest);
     }
-    return false;
-  }
 
-  async checkWPSEligibility(withdrawalRequest) {
-    // Simulate WPS eligibility check
-    await this.simulateWPSCall();
-    
-    // Mock eligibility - in real implementation, this would call WPS API
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     return {
       isEligible: true,
-      reasons: [],
-      wpsLimits: {
-        dailyLimit: 5000,
-        monthlyLimit: 20000,
-        remainingDaily: 4500,
-        remainingMonthly: 18000
+      reason: 'User meets all eligibility criteria',
+      limits: {
+        maxWithdrawal: 1000,
+        dailyLimit: 500
       }
     };
   }
 
   async processWithdrawal(withdrawalRequest, validationResult) {
-    if (!validationResult.success) {
-      return {
-        success: false,
-        error: 'Cannot process withdrawal - validation failed',
-        code: 'VALIDATION_FAILED'
-      };
+    if (this.debug) {
+      console.log('[SystemIntegration] Processing withdrawal:', withdrawalRequest);
     }
 
-    // Simulate WPS withdrawal processing
-    await this.simulateWPSCall();
-    
-    // Mock successful processing
-    const receipt = this.generateReceipt(withdrawalRequest);
-    
+    // Simulate processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
     return {
       success: true,
-      message: 'Withdrawal processed successfully',
-      receipt,
-      status: 'completed',
-      transactionId: `wps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      transactionId: `wps_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      receipt: this.generateReceipt(withdrawalRequest),
+      processedAt: new Date().toISOString()
     };
   }
 
   generateReceipt(withdrawalRequest) {
+    const fees = this.calculateFees(withdrawalRequest.amount);
+    
     return {
-      receiptNumber: `RCP_${Date.now()}`,
-      date: new Date().toISOString(),
+      receiptNumber: `RCP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       amount: withdrawalRequest.amount,
-      currency: 'AED',
-      user: withdrawalRequest.userData.name,
-      emiratesId: withdrawalRequest.userData.emiratesId,
-      employer: withdrawalRequest.userData.employerName,
-      wpsPartner: withdrawalRequest.userData.wpsPartner,
-      status: 'completed',
-      message: 'Transaction is in process and will be completed shortly'
+      fees: fees,
+      totalFee: fees.totalFee,
+      youReceive: fees.youReceive,
+      processedAt: new Date().toISOString(),
+      status: 'completed'
     };
   }
 
-  async simulateWPSCall() {
-    // Simulate network delay for WPS API calls
-    return new Promise(resolve => setTimeout(resolve, 100));
+  calculateFees(amount) {
+    const earlyAccessFee = Math.floor(amount * 0.05);
+    const vat = Math.floor(earlyAccessFee * 0.05);
+    const totalFee = earlyAccessFee + vat;
+    const youReceive = amount - totalFee;
+
+    return {
+      earlyAccessFee,
+      vat,
+      totalFee,
+      youReceive
+    };
   }
 }
 
 /**
- * Main PeyDey SDK Class
+ * WithdrawalHandler Class
+ * Handles withdrawal requests and system integration
  */
-export class PeyDeySDK {
-  constructor(config = {}) {
-    this.config = {
-      debug: false,
-      version: '1.0.0',
-      wpsEndpoint: config.wpsEndpoint || 'https://wps.peydey.ae',
-      currency: 'AED',
-      country: 'UAE',
-      ...config
+export class WithdrawalHandler {
+  constructor(systemIntegration) {
+    this.systemIntegration = systemIntegration;
+  }
+
+  async initiateWithdrawal(userData, amount, type = 'salary') {
+    const withdrawalRequest = {
+      userId: userData.id || userData.emiratesId,
+      amount: amount,
+      type: type,
+      timestamp: new Date().toISOString(),
+      status: 'pending'
     };
-    
-    this.userSession = new UserSession();
-    this.userEligibility = new UserEligibility();
-    this.transactionHistory = new TransactionHistory();
-    this.wpsIntegration = new WPSIntegration();
-    this.withdrawalHandler = new WithdrawalHandler(this.wpsIntegration);
-    
-    this.calls = [];
-  }
 
-  // Step 1: Onboard / Login with Emirates ID
-  async onboardUser(userCredentials) {
-    try {
-      // Simulate user authentication with Emirates ID
-      const userData = await this.authenticateUser(userCredentials);
-      
-      if (!userData) {
-        return {
-          success: false,
-          error: 'Authentication failed',
-          code: 'AUTH_FAILED'
-        };
-      }
-
-      // Create user session
-      const sessionId = this.userSession.createSession(userData);
-      
-      this.log('User onboarded successfully', { userId: userData.id, sessionId });
-      
-      return {
-        success: true,
-        sessionId,
-        userData,
-        message: 'User onboarded successfully'
-      };
-    } catch (error) {
-      this.log('Onboarding failed', { error: error.message });
-      return {
-        success: false,
-        error: 'Onboarding failed',
-        code: 'ONBOARDING_ERROR'
-      };
+    const validation = await this.validateWithdrawalRequest(userData, amount);
+    if (!validation.isValid) {
+      throw new Error(validation.reason);
     }
-  }
-
-  // Display user details (Welcome to PeyDey screen)
-  getUserDetails() {
-    const session = this.userSession.getSession();
-    
-    if (!session.isAuthenticated) {
-      return {
-        success: false,
-        error: 'User not authenticated',
-        code: 'NOT_AUTHENTICATED'
-      };
-    }
-
-    const userData = session.userData;
-    const eligibility = this.userEligibility.checkEligibility(userData);
-    const transactionHistory = this.transactionHistory.getTransactionHistory(userData.id);
-
-    this.log('User details retrieved', { userId: userData.id });
 
     return {
-      success: true,
-      userData: {
-        ...userData,
-        limits: eligibility.limits
+      ...withdrawalRequest,
+      callback: this.createCallback(withdrawalRequest)
+    };
+  }
+
+  async validateWithdrawalRequest(userData, amount) {
+    if (amount <= 0) {
+      return { isValid: false, reason: 'Invalid withdrawal amount' };
+    }
+
+    if (amount > userData.availableBalance) {
+      return { isValid: false, reason: 'Insufficient available balance' };
+    }
+
+    return { isValid: true, reason: 'Withdrawal request is valid' };
+  }
+
+  createCallback(withdrawalRequest) {
+    return {
+      validateUser: async (credentials) => {
+        return await this.systemIntegration.validateUser(credentials, withdrawalRequest);
       },
-      eligibility,
-      transactionHistory,
-      canProceed: eligibility.isEligible
-    };
-  }
-
-  // Get available balance and transaction history
-  getTransactionHistory() {
-    const session = this.userSession.getSession();
-    
-    if (!session.isAuthenticated) {
-      return {
-        success: false,
-        error: 'User not authenticated',
-        code: 'NOT_AUTHENTICATED'
-      };
-    }
-
-    const userData = session.userData;
-    const eligibility = this.userEligibility.checkEligibility(userData);
-    const transactions = this.transactionHistory.getTransactionHistory(userData.id);
-
-    return {
-      success: true,
-      availableBalance: eligibility.limits.availableBalance,
-      transactions: transactions.map(tx => ({
-        ...tx,
-        formattedDate: this.transactionHistory.formatTransactionDate(tx.timestamp)
-      }))
-    };
-  }
-
-  // Calculate fees for withdrawal amount
-  calculateWithdrawalFees(amount) {
-    const session = this.userSession.getSession();
-    
-    if (!session.isAuthenticated) {
-      return {
-        success: false,
-        error: 'User not authenticated',
-        code: 'NOT_AUTHENTICATED'
-      };
-    }
-
-    const userData = session.userData;
-    const fees = this.userEligibility.calculateFees(amount, userData);
-
-    return {
-      success: true,
-      fees
-    };
-  }
-
-  // Handle withdrawal request (Get Paid screen)
-  async handleWithdrawalRequest(amount, withdrawalType = 'salary') {
-    const session = this.userSession.getSession();
-    
-    if (!session.isAuthenticated) {
-      return {
-        success: false,
-        error: 'User not authenticated',
-        code: 'NOT_AUTHENTICATED'
-      };
-    }
-
-    const userData = session.userData;
-    const eligibility = this.userEligibility.checkEligibility(userData);
-    
-    if (!eligibility.isEligible) {
-      return {
-        success: false,
-        error: 'User not eligible for withdrawal',
-        code: 'NOT_ELIGIBLE',
-        reasons: eligibility.reasons
-      };
-    }
-
-    // Add limits to userData for withdrawal validation
-    userData.limits = eligibility.limits;
-
-    // Initiate withdrawal
-    const withdrawalResult = this.withdrawalHandler.initiateWithdrawal(userData, amount, withdrawalType);
-    
-    if (withdrawalResult.success) {
-      this.log('Withdrawal request initiated', { 
-        requestId: withdrawalResult.withdrawalRequest.id,
-        amount,
-        userId: userData.id
-      });
-    }
-
-    return withdrawalResult;
-  }
-
-  // Exit SDK
-  exitSDK() {
-    this.userSession.clearSession();
-    this.log('User exited SDK');
-    return {
-      success: true,
-      message: 'Successfully exited SDK'
-    };
-  }
-
-  // Utility methods
-  log(message, data = {}) {
-    if (this.config.debug) {
-      console.log(`[PeyDeySDK] ${message}`, data);
-    }
-    this.calls.push({ 
-      type: 'log', 
-      message, 
-      data, 
-      timestamp: Date.now() 
-    });
-  }
-
-  getCallHistory() {
-    return this.calls;
-  }
-
-  clearHistory() {
-    this.calls = [];
-  }
-
-  getStats() {
-    return {
-      totalCalls: this.calls.length,
-      callTypes: this.calls.reduce((acc, call) => {
-        acc[call.type] = (acc[call.type] || 0) + 1;
-        return acc;
-      }, {}),
-      lastCall: this.calls[this.calls.length - 1]
-    };
-  }
-
-  // Mock authentication method for UAE users
-  async authenticateUser(credentials) {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Mock user data - in real implementation, this would call your auth API
-    const mockUsers = {
-      '784-1968-6570305-0': {
-        id: 'user_001',
-        name: 'Muhammad Abdul Majid',
-        emiratesId: '784-1968-6570305-0',
-        phoneNumber: '+971523213841',
-        email: 'muhammad@example.com',
-        monthlySalary: 3000,
-        earnedSalary: 1500,
-        accountAge: 45,
-        hasActiveLoans: false,
-        creditScore: 720,
-        employerName: 'Emirates NBD',
-        wpsPartner: 'Alfardan Exchange',
-        profilePicture: 'https://example.com/profile.jpg'
+      processWithdrawal: async (validationResult) => {
+        return await this.systemIntegration.processWithdrawal(withdrawalRequest, validationResult);
       }
     };
-
-    const user = mockUsers[credentials.emiratesId];
-    return user && credentials.phoneNumber === '+971523213841' ? user : null;
   }
 }
 
-// Default export
-export default PeyDeySDK;
+/**
+ * Main Workforce SDK Class
+ * Orchestrates the entire flow
+ */
+export class WorkforceSDK {
+  constructor(config = {}) {
+    this.config = {
+      debug: config.debug || false,
+      endpoint: config.endpoint || 'https://api.example.com',
+      currency: config.currency || 'USD',
+      country: config.country || 'US',
+      version: config.version || '1.0.0'
+    };
+
+    this.userSession = new UserSession();
+    this.userEligibility = new UserEligibility();
+    this.transactionHistory = new TransactionHistory();
+    this.systemIntegration = new SystemIntegration(this.config);
+    this.withdrawalHandler = new WithdrawalHandler(this.systemIntegration);
+  }
+
+  /**
+   * Step 1: Onboard user with ID
+   */
+  async onboardUser(credentials) {
+    try {
+      // Validate credentials
+      const eligibility = this.userEligibility.checkEligibility(credentials);
+      if (!eligibility.isEligible) {
+        throw new Error(`User not eligible: ${eligibility.reasons.join(', ')}`);
+      }
+
+      // Calculate limits
+      const limits = this.userEligibility.calculateLimits(credentials);
+      
+      // Create user session
+      const userData = {
+        ...credentials,
+        ...limits
+      };
+      
+      const session = this.userSession.createSession(userData);
+      
+      if (this.config.debug) {
+        console.log(`[WorkforceSDK] User onboarded successfully:`, session);
+      }
+
+      return {
+        success: true,
+        user: session,
+        message: 'User onboarded successfully'
+      };
+    } catch (error) {
+      if (this.config.debug) {
+        console.error(`[WorkforceSDK] Onboarding failed:`, error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Step 2: Display user information
+   */
+  getUserDetails() {
+    if (!this.userSession.isUserAuthenticated()) {
+      throw new Error('User not authenticated');
+    }
+
+    const session = this.userSession.getSession();
+    const limits = this.userEligibility.calculateLimits(session);
+
+    return {
+      ...session,
+      ...limits,
+      isAuthenticated: true
+    };
+  }
+
+  /**
+   * Step 3: Get balance and transactions
+   */
+  getTransactionHistory() {
+    if (!this.userSession.isUserAuthenticated()) {
+      throw new Error('User not authenticated');
+    }
+
+    const session = this.userSession.getSession();
+    const transactions = this.transactionHistory.getTransactionHistory(session.id);
+
+    return {
+      availableBalance: session.availableBalance,
+      transactions: transactions,
+      totalTransactions: transactions.length
+    };
+  }
+
+  /**
+   * Step 4: Calculate fees and VAT
+   */
+  calculateWithdrawalFees(amount) {
+    if (!this.userSession.isUserAuthenticated()) {
+      throw new Error('User not authenticated');
+    }
+
+    const session = this.userSession.getSession();
+    return this.userEligibility.calculateFees(amount, session);
+  }
+
+  /**
+   * Step 5: Initiate withdrawal
+   */
+  async handleWithdrawalRequest(amount, type = 'salary') {
+    if (!this.userSession.isUserAuthenticated()) {
+      throw new Error('User not authenticated');
+    }
+
+    const session = this.userSession.getSession();
+    
+    try {
+      const withdrawal = await this.withdrawalHandler.initiateWithdrawal(session, amount, type);
+      
+      // Add to transaction history
+      this.transactionHistory.addTransaction({
+        userId: session.id,
+        type: 'withdrawal',
+        amount: amount,
+        status: 'pending',
+        withdrawalId: withdrawal.id
+      });
+
+      if (this.config.debug) {
+        console.log(`[WorkforceSDK] Withdrawal initiated:`, withdrawal);
+      }
+
+      return withdrawal;
+    } catch (error) {
+      if (this.config.debug) {
+        console.error(`[WorkforceSDK] Withdrawal failed:`, error);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Exit and clear session
+   */
+  exitSDK() {
+    this.userSession.clearSession();
+    if (this.config.debug) {
+      console.log(`[WorkforceSDK] SDK session cleared`);
+    }
+  }
+
+  /**
+   * Debug logging
+   */
+  log(message, data = null) {
+    if (this.config.debug) {
+      console.log(`[WorkforceSDK] ${message}`, data);
+    }
+  }
+}
+
+export default WorkforceSDK;

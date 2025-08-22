@@ -1,21 +1,17 @@
 {
-  "name": "peydey-sdk",
+  "name": "workforce-sdk",
   "private": false,
-  "version": "1.0.1",
+  "version": "1.0.0",
   "type": "module",
-  "description": "UAE Workforce Payment System Integration SDK for PeyDey",
+  "description": "Workforce Payment System Integration SDK",
   "keywords": [
-    "peydey",
-    "uae",
-    "wps",
-    "workforce-payment",
-    "emirates-id",
-    "aed",
-    "salary-advance",
+    "workforce",
     "payment-system",
-    "sdk"
+    "salary-advance",
+    "sdk",
+    "integration"
   ],
-  "author": "PeyDey Team",
+  "author": "Workforce Team",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
@@ -61,10 +57,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Mustafa-ilahi/demo-peyday-sdk"
+    "url": "https://github.com/Mustafa-ilahi/workforce-sdk"
   },
   "bugs": {
-    "url": "https://github.com/Mustafa-ilahi/demo-peyday-sdk/issues"
+    "url": "https://github.com/Mustafa-ilahi/workforce-sdk/issues"
   },
-  "homepage": "https://github.com/Mustafa-ilahi/demo-peyday-sdk#readme"
+  "homepage": "https://github.com/Mustafa-ilahi/workforce-sdk#readme"
 }
